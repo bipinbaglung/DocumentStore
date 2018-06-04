@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentStore", "DocumentStore\DocumentStore.csproj", "{BAFD586A-9F4C-4089-BED5-D9436C679BC4}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "DocumentStoreSetup", "Setup\Setup.vdproj", "{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Debug|Any CPU.ActiveCfg = Debug
+		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Debug|Any CPU.Build.0 = Debug
+		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+		SolutionGuid = {F53F76EE-C744-4DBE-9B27-18AA7CC38A77}
+	EndGlobalSection
+EndGlobal
