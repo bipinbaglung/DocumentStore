@@ -5,8 +5,9 @@ Objectives:
 2. Store images associated to the article in a local drive
 3. Interface to search document by its content or metadata
 4. View, edit, print, save the searched document.  
-4. Export search result to MS Excel file
-5. Save searched documents as MS Word file
+5. Export search result to MS Excel file
+6. Save searched documents as MS Word file
+7. Create installer file to install the application
 
 Add Document
 
