@@ -7,6 +7,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
+
 namespace DocumentStore
 {
     public partial class UserControlViewDocument : UserControl
@@ -128,39 +129,24 @@ namespace DocumentStore
                 };
                 if (DialogResult.OK == saveFile.ShowDialog())
                 {
-                    object missing = System.Reflection.Missing.Value;
-                    Microsoft.Office.Interop.Word.Document newDocument = new Microsoft.Office.Interop.Word.Document();
-
-                    Microsoft.Office.Interop.Word.Paragraph paraTitle;
-                    paraTitle = newDocument.Content.Paragraphs.Add(ref missing);
-
-                    paraTitle.Range.Text = _title;
-                    paraTitle.Range.ParagraphFormat.Alignment = Microsoft.Office.Interop.Word.WdParagraphAlignment.wdAlignParagraphCenter;
-                    paraTitle.Range.Font.Bold = 1;
-                    paraTitle.Format.SpaceAfter = 15;
-                    paraTitle.Range.InsertParagraphAfter();
-                    paraTitle.Range.Bold = 0;
-                    paraTitle.Format.SpaceAfter = 0;
-
-                    Microsoft.Office.Interop.Word.Paragraph paraAuthor;
-                    paraAuthor = newDocument.Content.Paragraphs.Add(ref missing);
-                    paraAuthor.Range.Text = _author;
-                    paraAuthor.Range.InsertParagraphAfter();
-                    paraTitle.Range.ParagraphFormat.Alignment = Microsoft.Office.Interop.Word.WdParagraphAlignment.wdAlignParagraphJustify;
-
-                    Microsoft.Office.Interop.Word.Paragraph paraBody;
-                    paraBody = newDocument.Content.Paragraphs.Add(ref missing);
-                    paraBody.Range.Text = _body;
-                    paraBody.Range.InsertParagraphAfter();
-
-                    object saveFileName = saveFile.FileName;
+                    string saveFileName = saveFile.FileName;
                     if (!Path.GetExtension(saveFile.FileName).Equals("." + saveFile.DefaultExt, StringComparison.InvariantCultureIgnoreCase))
                         saveFileName = saveFile.FileName + "." + saveFile.DefaultExt;
-                    newDocument.SaveAs2(ref saveFileName);
+                    using (Xceed.Words.NET.DocX newDocument = Xceed.Words.NET.DocX.Create(saveFileName))
+                    {
+                        Xceed.Words.NET.Formatting titleFormat = new Xceed.Words.NET.Formatting();
+                        titleFormat.Bold = true;
+                        Xceed.Words.NET.Paragraph paraTitle = newDocument.InsertParagraph(_title, false, titleFormat);
+                        paraTitle.Alignment = Xceed.Words.NET.Alignment.center;
+                        paraTitle.LineSpacingAfter = 15;
+                        newDocument.InsertParagraph();
+                        Xceed.Words.NET.Paragraph paraBody = newDocument.InsertParagraph(_author);
+                        newDocument.InsertParagraph();
+                        Xceed.Words.NET.Paragraph paraDateString = newDocument.InsertParagraph(_body);
+                        newDocument.InsertParagraph();
 
-                    newDocument.Close(ref missing, ref missing, ref missing);
-                    newDocument = null;
-
+                        newDocument.Save();
+                    }
                     ShowMessageBox("Document created successfully !");
                 }
             }

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
 using System.IO;
+using Xceed.Words.NET;
 
 namespace DocumentStore
 {
@@ -136,86 +137,93 @@ namespace DocumentStore
             MessageBox.Show(message, "Document Store", buttons, icon);
         }
 
-
         private void ButtonSearch_Click(object sender, EventArgs e)
         {
             if (ValidateSearchInputs())
             {
-                string searchText = textBoxSearchText.Text;
-                long publisher = (long)comboBoxPublisherScope.SelectedValue;
-                long documentType = (long)comboBoxDocumentTypeScope.SelectedValue;
-                long author = (long)comboBoxSearchAuthor.SelectedValue;
+                Search();
+            }
+        }
 
-                string whereClause = string.Empty;
-                if (publisher != 0)
-                    whereClause = " Publisher = " + publisher;
+        private void Search()
+        {
+            string searchText = textBoxSearchText.Text;
+            long publisher = (long)comboBoxPublisherScope.SelectedValue;
+            long documentType = (long)comboBoxDocumentTypeScope.SelectedValue;
+            long author = (long)comboBoxSearchAuthor.SelectedValue;
 
-                if (documentType != 0)
-                {
-                    if (!string.IsNullOrWhiteSpace(whereClause))
-                        whereClause += " AND DocumentType =" + documentType;
-                    else
-                        whereClause = " DocumentType = " + documentType;
+            string whereClause = string.Empty;
+            if (publisher != 0)
+                whereClause = " Publisher = " + publisher;
 
-                }
-                if (author != 0)
-                {
-                    if (!string.IsNullOrWhiteSpace(whereClause))
-                        whereClause += " AND Author =" + author;
-                    else
-                        whereClause = " Author = " + author;
-                }
-
-                string stringClause = string.Empty;
-                if (checkBoxSearchTitle.Checked)
-                    stringClause = " Title LIKE N'%" + searchText + "%' ";
-
-                if (checkBoxSearchSummary.Checked)
-                    if (string.IsNullOrWhiteSpace(stringClause))
-                        stringClause = " Summary LIKE N'%" + searchText + "%' ";
-                    else
-                        stringClause += " OR Summary LIKE N'%" + searchText + "%' ";
-
-                if (checkBoxSearchBody.Checked)
-                    if (string.IsNullOrWhiteSpace(stringClause))
-                        stringClause = " Body LIKE N'%" + searchText + "%' ";
-                    else stringClause += " OR Body LIKE N'%" + searchText + "%' ";
-
-                if (string.IsNullOrWhiteSpace(whereClause))
-                    whereClause = stringClause;
-                else if (!string.IsNullOrWhiteSpace(stringClause))
-                    whereClause += " AND (" + stringClause + ")";
-
+            if (documentType != 0)
+            {
                 if (!string.IsNullOrWhiteSpace(whereClause))
-                    whereClause = " WHERE " + whereClause;
+                    whereClause += " AND DocumentType =" + documentType;
+                else
+                    whereClause = " DocumentType = " + documentType;
 
-                string query = @"SELECT ROW_NUMBER() OVER (ORDER BY DI.CreatedDate DESC, DI.Id DESC) AS SN, DI.Id, AI.Name AS Author, Title, DT.Name as DocumentType,  '' AS NepaliDate, CreatedDate AS EnglishDate, DateUncertain
+            }
+            if (author != 0)
+            {
+                if (!string.IsNullOrWhiteSpace(whereClause))
+                    whereClause += " AND Author =" + author;
+                else
+                    whereClause = " Author = " + author;
+            }
+
+            string stringClause = string.Empty;
+
+            if (checkBoxSearchTitle.Checked)
+                stringClause = " CONTAINS(Title, N'\"" + searchText + "\"') ";
+
+            if (checkBoxSearchSummary.Checked)
+                if (string.IsNullOrWhiteSpace(stringClause))
+                    stringClause = " CONTAINS(Summary,  N'\"" + searchText + "\"') ";
+                else
+                    stringClause += " OR CONTAINS(Summary, N'\"" + searchText + "\"') ";
+
+            if (checkBoxSearchBody.Checked)
+                if (string.IsNullOrWhiteSpace(stringClause))
+                    stringClause = " CONTAINS(Body, N'\"" + searchText + "\"') ";
+                else
+                    stringClause += " OR CONTAINS(Body, N'\"" + searchText + "\"') ";
+
+            if (string.IsNullOrWhiteSpace(whereClause))
+                whereClause = stringClause;
+            else if (!string.IsNullOrWhiteSpace(stringClause))
+                whereClause += " AND (" + stringClause + ")";
+
+            if (!string.IsNullOrWhiteSpace(whereClause))
+                whereClause = " WHERE " + whereClause;
+
+            string query = @"SELECT ROW_NUMBER() OVER (ORDER BY DI.CreatedDate DESC, DI.Id DESC) AS SN, DI.Id, AI.Name AS Author, Title, DT.Name as DocumentType,  '' AS NepaliDate, CreatedDate AS EnglishDate, DateUncertain
                                 FROM tbl_DocumentInfo DI WITH (NOLOCK)
 	                                 LEFT JOIN tbl_PublisherInfo PI WITH (NOLOCK) ON DI.Publisher = PI.Id
 	                                 LEFT JOIN tbl_DocumentType DT WITH (NOLOCK) ON DI.DocumentType = DT.Id
 	                                 LEFT JOIN tbl_AuthorInfo AI WITH (NOLOCK) ON AI.Id = DI.Author
                                  " + whereClause;
 
-                DataTable dt = DBSupport.GetDataTable(query);
-                if (dt != null)
+            DataTable dt = DBSupport.GetDataTable(query);
+            if (dt != null)
+            {
+                foreach (DataRow dr in dt.Rows)
                 {
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
-                        NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
-                        bool isUncertain = bool.Parse(dr["DateUncertain"].ToString());
-                        dr["NepaliDate"] = nepaliDate.ToString() + (isUncertain ? " *" : "");
-                    }
-                    labelResultCount.Text = dt.Rows.Count.ToString();
+                    DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
+                    NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
+                    bool isUncertain = bool.Parse(dr["DateUncertain"].ToString());
+                    dr["NepaliDate"] = nepaliDate.ToString() + (isUncertain ? " *" : "");
                 }
-                else
-                    labelResultCount.Text = "0";
-
-                dataGridViewDocumentSearchResult.DataSource = dt;
-                dataGridViewDocumentSearchResult.AutoResizeColumns();
-                if (!string.IsNullOrWhiteSpace(stringClause))
-                    highlightText = searchText;
+                labelResultCount.Text = dt.Rows.Count.ToString();
             }
+            else
+                labelResultCount.Text = "0";
+
+            dataGridViewDocumentSearchResult.DataSource = dt;
+            dataGridViewDocumentSearchResult.AutoResizeColumns();
+            if (!string.IsNullOrWhiteSpace(stringClause))
+                highlightText = searchText;
+
         }
 
         private bool ValidateSearchInputs()
@@ -230,6 +238,7 @@ namespace DocumentStore
             }
             return true;
         }
+
         private void comboBoxPublisherScope_SelectedIndexChanged(object sender, EventArgs e)
         {
             LoadDocumentTypes();
@@ -269,7 +278,6 @@ namespace DocumentStore
         {
             try
             {
-
                 DataTable resultTable = (dataGridViewDocumentSearchResult.DataSource as DataTable);
 
                 if (resultTable != null && resultTable.Rows.Count > 0)
@@ -356,8 +364,6 @@ namespace DocumentStore
             DataGridViewSelectedRowCollection selectedRows = dataGridViewDocumentSearchResult.SelectedRows;
             if (selectedRows.Count > 0)
             {
-                Microsoft.Office.Interop.Word.Document newDocument = null;
-                object missing = System.Reflection.Missing.Value;
                 try
                 {
                     SaveFileDialog saveFile = new SaveFileDialog()
@@ -367,10 +373,12 @@ namespace DocumentStore
                         DefaultExt = "docx"
                     };
 
-
                     if (DialogResult.OK == saveFile.ShowDialog())
                     {
-                        newDocument = new Microsoft.Office.Interop.Word.Document();
+                        string saveFileName = saveFile.FileName;
+                        if (!Path.GetExtension(saveFile.FileName).Equals("." + saveFile.DefaultExt, StringComparison.InvariantCultureIgnoreCase))
+                            saveFileName = saveFile.FileName + "." + saveFile.DefaultExt;
+                        DocX newDocument = DocX.Create(saveFileName);
 
                         for (int i = selectedRows.Count - 1; i >= 0; i--)
                         {
@@ -394,12 +402,7 @@ namespace DocumentStore
                             }
                         }
 
-
-                        object saveFileName = saveFile.FileName;
-                        if (!Path.GetExtension(saveFile.FileName).Equals("." + saveFile.DefaultExt, StringComparison.InvariantCultureIgnoreCase))
-                            saveFileName = saveFile.FileName + "." + saveFile.DefaultExt;
-                        newDocument.SaveAs2(ref saveFileName);
-
+                        newDocument.Save();
                         ShowMessageBox("Document created successfully !");
                     }
                 }
@@ -407,43 +410,9 @@ namespace DocumentStore
                 {
                     ShowMessageBox("Could not save file. Error : " + ex.Message);
                 }
-                finally
-                {
-                    if (newDocument != null)
-                        newDocument.Close(ref missing, ref missing, ref missing);
-                    newDocument = null;
-                }
             }
             else
             { }
-        }
-
-        private void AppendInfoToDocument(Microsoft.Office.Interop.Word.Document newDocument, string title, string body, string dateString)
-        {
-            object missing = System.Reflection.Missing.Value;
-
-            Microsoft.Office.Interop.Word.Paragraph paraTitle;
-            paraTitle = newDocument.Content.Paragraphs.Add(ref missing);
-            paraTitle.Range.Text = title;
-            paraTitle.Range.Bold = 1;
-            paraTitle.Range.ParagraphFormat.Alignment = Microsoft.Office.Interop.Word.WdParagraphAlignment.wdAlignParagraphCenter;
-            paraTitle.Format.SpaceAfter = 15;
-            paraTitle.Range.InsertParagraphAfter();
-            paraTitle.Range.Bold = 0;
-            paraTitle.Range.ParagraphFormat.Alignment = Microsoft.Office.Interop.Word.WdParagraphAlignment.wdAlignParagraphJustify;
-            paraTitle.Format.SpaceAfter = 0;
-
-            Microsoft.Office.Interop.Word.Paragraph paraBody;
-            paraBody = newDocument.Content.Paragraphs.Add(ref missing);
-            paraBody.Range.Text = body;
-            paraBody.Range.Bold = 0;
-            paraBody.Range.InsertParagraphAfter();
-
-            Microsoft.Office.Interop.Word.Paragraph paraDateString;
-            paraDateString = newDocument.Content.Paragraphs.Add(ref missing);
-            paraDateString.Range.Text = dateString + Environment.NewLine + Environment.NewLine + Environment.NewLine;
-            paraDateString.Range.Bold = 0;
-            paraDateString.Range.InsertParagraphAfter();
         }
 
         private void exportSelectedFilesAsSeparateDocxToolStripMenuItem_Click(object sender, EventArgs e)
@@ -461,50 +430,41 @@ namespace DocumentStore
                         string today = NepaliDateTime.Now.ToDateTimeString();
                         for (int i = selectedRows.Count - 1; i >= 0; i--)
                         {
-                            Microsoft.Office.Interop.Word.Document newDocument = null;
-                            object missing = System.Reflection.Missing.Value;
-
                             try
                             {
-                                newDocument = new Microsoft.Office.Interop.Word.Document();
-
                                 object fileId = selectedRows[i].Cells["ColumnID"].Value;
 
                                 string query = @"SELECT Title, Body, CreatedDate AS EnglishDate
                                 FROM tbl_DocumentInfo DI WITH (NOLOCK) WHERE Id = @Id";
-
-                                string filename = "ExportFile_" + i + ".docx";
 
                                 using (SqlCommand command = new SqlCommand(query))
                                 {
                                     command.Parameters.Add("@Id", SqlDbType.BigInt).Value = fileId;
                                     DataTable dt = DBSupport.ExecuteQueryAndGetDataTable(command);
                                     if (dt != null)
-                                        foreach (DataRow dr in dt.Rows)
-                                        {
-                                            DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
-                                            NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
-                                            filename = dr["Title"].ToString() + "_" + nepaliDate.ToString();
-                                            AppendInfoToDocument(newDocument, dr["Title"].ToString(), dr["body"].ToString(), nepaliDate.ToString());
-                                        }
-                                }
-                                string folderPath = Path.Combine(folderBrowserDialog.SelectedPath, today);
-                                if (!Directory.Exists(folderPath))
-                                    Directory.CreateDirectory(folderPath);
+                                    {
+                                        string folderPath = Path.Combine(folderBrowserDialog.SelectedPath, today);
+                                        if (!Directory.Exists(folderPath))
+                                            Directory.CreateDirectory(folderPath);
 
-                                object saveFileName = Path.Combine(folderPath, filename + ".docx");
-                                newDocument.SaveAs2(ref saveFileName);
+                                        DateTime engDate = DateTime.Parse(dt.Rows[0]["EnglishDate"].ToString());
+                                        NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
+                                        string filename = dt.Rows[0]["Title"].ToString() + "_" + nepaliDate.ToString();
+                                        string saveFileName = Path.Combine(folderPath, filename + ".docx");
+                                        using (DocX newDocument = DocX.Create(saveFileName))
+                                        {
+                                            AppendInfoToDocument(newDocument, dt.Rows[0]["Title"].ToString(), dt.Rows[0]["body"].ToString()
+                                                    , nepaliDate.ToString());
+                                            newDocument.Save();
+                                        }
+                                    }
+                                }
+
                                 progressBarExport.Increment(incrementValue);
                             }
                             catch (Exception ex)
                             {
                                 ShowMessageBox("Could not save files. Error : " + ex.Message);
-                            }
-                            finally
-                            {
-                                if (newDocument != null)
-                                    newDocument.Close(ref missing, ref missing, ref missing);
-                                newDocument = null;
                             }
                         }
                         ShowMessageBox("Documents created successfully !");
@@ -521,6 +481,20 @@ namespace DocumentStore
             }
             else
             { }
+        }
+
+        private void AppendInfoToDocument(DocX newDocument, string title, string body, string dateString)
+        {
+            Formatting titleFormat = new Formatting();
+            titleFormat.Bold = true;
+            Paragraph paraTitle = newDocument.InsertParagraph(title, false, titleFormat);
+            paraTitle.Alignment = Alignment.center;
+            paraTitle.LineSpacingAfter = 15;
+            newDocument.InsertParagraph();
+            Paragraph paraBody = newDocument.InsertParagraph(body);
+            newDocument.InsertParagraph();
+            Paragraph paraDateString = newDocument.InsertParagraph(dateString + Environment.NewLine);
+            newDocument.InsertParagraph();
         }
     }
 }

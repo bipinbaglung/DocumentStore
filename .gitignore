@@ -3,3 +3,9 @@
 ################################################################################
 
 /DocumentStore/DocumentStore.csproj.user
+/.vs/DocumentStore/v15
+/DocumentStore/obj/Debug
+/DocumentStore/bin/Debug
+/Setup/Debug
+/packages/DocX.1.2.1
+/.vs/DocumentStore/DesignTimeBuild

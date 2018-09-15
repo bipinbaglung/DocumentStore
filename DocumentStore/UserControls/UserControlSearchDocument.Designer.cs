@@ -40,8 +40,8 @@
             this.ColumnCreatedDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DateUncertain = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.contextMenuStripGrid = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.exportAsDocxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedFilesAsSeparateDocxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAsDocxToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonSearch = new System.Windows.Forms.Button();
             this.textBoxSearchText = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -101,7 +101,7 @@
             this.dataGridViewDocumentSearchResult.RowTemplate.ReadOnly = true;
             this.dataGridViewDocumentSearchResult.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewDocumentSearchResult.ShowEditingIcon = false;
-            this.dataGridViewDocumentSearchResult.Size = new System.Drawing.Size(696, 385);
+            this.dataGridViewDocumentSearchResult.Size = new System.Drawing.Size(809, 385);
             this.dataGridViewDocumentSearchResult.TabIndex = 12;
             this.dataGridViewDocumentSearchResult.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewDocumentSearchResult_CellDoubleClick);
             // 
@@ -195,6 +195,13 @@
             this.contextMenuStripGrid.Name = "contextMenuStripGrid";
             this.contextMenuStripGrid.Size = new System.Drawing.Size(248, 48);
             // 
+            // exportSelectedFilesAsSeparateDocxToolStripMenuItem
+            // 
+            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Name = "exportSelectedFilesAsSeparateDocxToolStripMenuItem";
+            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Size = new System.Drawing.Size(247, 22);
+            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Text = "Export selected files";
+            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedFilesAsSeparateDocxToolStripMenuItem_Click);
+            // 
             // exportAsDocxToolStripMenuItem
             // 
             this.exportAsDocxToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -206,17 +213,10 @@
             this.exportAsDocxToolStripMenuItem.TextImageRelation = System.Windows.Forms.TextImageRelation.Overlay;
             this.exportAsDocxToolStripMenuItem.Click += new System.EventHandler(this.exportAsDocxToolStripMenuItem_Click);
             // 
-            // exportSelectedFilesAsSeparateDocxToolStripMenuItem
-            // 
-            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Name = "exportSelectedFilesAsSeparateDocxToolStripMenuItem";
-            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Size = new System.Drawing.Size(247, 22);
-            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Text = "Export selected files";
-            this.exportSelectedFilesAsSeparateDocxToolStripMenuItem.Click += new System.EventHandler(this.exportSelectedFilesAsSeparateDocxToolStripMenuItem_Click);
-            // 
             // buttonSearch
             // 
             this.buttonSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonSearch.Location = new System.Drawing.Point(599, 65);
+            this.buttonSearch.Location = new System.Drawing.Point(712, 65);
             this.buttonSearch.Name = "buttonSearch";
             this.buttonSearch.Size = new System.Drawing.Size(72, 23);
             this.buttonSearch.TabIndex = 11;
@@ -231,7 +231,7 @@
             this.textBoxSearchText.Enabled = false;
             this.textBoxSearchText.Location = new System.Drawing.Point(9, 11);
             this.textBoxSearchText.Name = "textBoxSearchText";
-            this.textBoxSearchText.Size = new System.Drawing.Size(696, 20);
+            this.textBoxSearchText.Size = new System.Drawing.Size(808, 20);
             this.textBoxSearchText.TabIndex = 10;
             this.textBoxSearchText.Text = "Insert text to search";
             this.textBoxSearchText.Enter += new System.EventHandler(this.textBoxSearchText_Enter);
@@ -323,7 +323,7 @@
             this.buttonSaveOnFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSaveOnFile.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSaveOnFile.Image = global::DocumentStore.Properties.Resources.Save16;
-            this.buttonSaveOnFile.Location = new System.Drawing.Point(677, 65);
+            this.buttonSaveOnFile.Location = new System.Drawing.Point(790, 65);
             this.buttonSaveOnFile.Name = "buttonSaveOnFile";
             this.buttonSaveOnFile.Size = new System.Drawing.Size(27, 23);
             this.buttonSaveOnFile.TabIndex = 28;
@@ -347,7 +347,7 @@
             this.panel2.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.panel2.Controls.Add(this.labelResultCount);
             this.panel2.Controls.Add(this.labelResult);
-            this.panel2.Location = new System.Drawing.Point(257, 484);
+            this.panel2.Location = new System.Drawing.Point(314, 484);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(200, 22);
             this.panel2.TabIndex = 30;
@@ -367,7 +367,7 @@
             this.progressBarExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBarExport.Location = new System.Drawing.Point(9, 284);
             this.progressBarExport.Name = "progressBarExport";
-            this.progressBarExport.Size = new System.Drawing.Size(695, 23);
+            this.progressBarExport.Size = new System.Drawing.Size(808, 23);
             this.progressBarExport.TabIndex = 31;
             this.progressBarExport.Visible = false;
             // 
@@ -384,7 +384,7 @@
             this.Controls.Add(this.textBoxSearchText);
             this.Controls.Add(this.panel1);
             this.Name = "UserControlSearchDocument";
-            this.Size = new System.Drawing.Size(713, 506);
+            this.Size = new System.Drawing.Size(826, 506);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewDocumentSearchResult)).EndInit();
             this.contextMenuStripGrid.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
