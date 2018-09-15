@@ -36,6 +36,10 @@ CREATE TABLE [dbo].[tbl_DocumentInfo](
 	[UpdatedDate] [datetime] NULL
 ) ON [PRIMARY]
 
+CREATE UNIQUE INDEX ui_DocumentInfoId ON tbl_documentInfo(Id); 
+CREATE FULLTEXT CATALOG FTCatLog AS DEFAULT;  
+CREATE  FULLTEXT INDEX ON tbl_documentInfo(Title, Summary, Body) Key Index ui_DocumentInfoId
+
 CREATE TABLE [dbo].[tbl_DocumentType](
 	[Id] [bigint] IDENTITY(1,1) NOT NULL,
 	[Name] [nvarchar](128) NOT NULL,

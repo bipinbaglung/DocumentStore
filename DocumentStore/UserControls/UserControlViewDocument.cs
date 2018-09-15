@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NPOI.XWPF.UserModel;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
@@ -74,7 +75,7 @@ namespace DocumentStore
                         AppendText(richTextBoxDocumentContent, _body, new Font("Arial", 12), HorizontalAlignment.Left);
                         AppendText(richTextBoxDocumentContent, Environment.NewLine);
                         AppendText(richTextBoxDocumentContent, Environment.NewLine);
-                        AppendText(richTextBoxDocumentContent, _createdDate, new Font("Arial", 12), HorizontalAlignment.Left , isUncertain ? Color.Red : Color.Black);
+                        AppendText(richTextBoxDocumentContent, _createdDate, new Font("Arial", 12), HorizontalAlignment.Left, isUncertain ? Color.Red : Color.Black);
                     }
                     else
                     {
@@ -101,7 +102,7 @@ namespace DocumentStore
             }
         }
 
-        private void AppendText(RichTextBox textbox, string text, Font font = null, HorizontalAlignment alignment = HorizontalAlignment.Left, Color ? color = null )
+        private void AppendText(RichTextBox textbox, string text, Font font = null, HorizontalAlignment alignment = HorizontalAlignment.Left, Color? color = null)
         {
             int startPosition = textbox.Text.Length;
             int selectionLength = text.Length;
@@ -132,20 +133,33 @@ namespace DocumentStore
                     string saveFileName = saveFile.FileName;
                     if (!Path.GetExtension(saveFile.FileName).Equals("." + saveFile.DefaultExt, StringComparison.InvariantCultureIgnoreCase))
                         saveFileName = saveFile.FileName + "." + saveFile.DefaultExt;
-                    using (Xceed.Words.NET.DocX newDocument = Xceed.Words.NET.DocX.Create(saveFileName))
+                    
+                    using (var fs = new FileStream(saveFileName, FileMode.Create, FileAccess.Write))
                     {
-                        Xceed.Words.NET.Formatting titleFormat = new Xceed.Words.NET.Formatting();
-                        titleFormat.Bold = true;
-                        Xceed.Words.NET.Paragraph paraTitle = newDocument.InsertParagraph(_title, false, titleFormat);
-                        paraTitle.Alignment = Xceed.Words.NET.Alignment.center;
-                        paraTitle.LineSpacingAfter = 15;
-                        newDocument.InsertParagraph();
-                        Xceed.Words.NET.Paragraph paraBody = newDocument.InsertParagraph(_author);
-                        newDocument.InsertParagraph();
-                        Xceed.Words.NET.Paragraph paraDateString = newDocument.InsertParagraph(_body);
-                        newDocument.InsertParagraph();
+                        XWPFDocument doc = new XWPFDocument();
+                        var paraTitle = doc.CreateParagraph();
+                        paraTitle.Alignment = ParagraphAlignment.CENTER;
+                        paraTitle.SpacingAfter = 15;
+                        XWPFRun runTitle = paraTitle.CreateRun();
+                        runTitle.IsBold = true;
+                        runTitle.SetText(_title);
+                        doc.CreateParagraph();
+                        doc.CreateParagraph().CreateRun().SetText(_author);
+                        doc.CreateParagraph();
+                        
+                        using (TextReader textReader = new StringReader(_body))
+                        {
+                            string line;
+                            while ((line = textReader.ReadLine()) != null)
+                            {
+                                var paraBody = doc.CreateParagraph();
+                                paraBody.Alignment = ParagraphAlignment.BOTH;
+                                paraBody.CreateRun().SetText(line);
+                            }
+                        }
+                        doc.CreateParagraph();
 
-                        newDocument.Save();
+                        doc.Write(fs);
                     }
                     ShowMessageBox("Document created successfully !");
                 }

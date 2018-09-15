@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
+﻿using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
+using NPOI.XWPF.UserModel;
+using System;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Data.SqlClient;
 using System.IO;
-using Xceed.Words.NET;
+using System.Windows.Forms;
 
 namespace DocumentStore
 {
@@ -288,65 +284,39 @@ namespace DocumentStore
                     };
                     if (DialogResult.OK == saveFile.ShowDialog())
                     {
-                        Microsoft.Office.Interop.Excel.Application excel = null;
-                        Microsoft.Office.Interop.Excel.Workbooks workbooks = null;
-                        Microsoft.Office.Interop.Excel.Workbook workbook = null;
-                        Microsoft.Office.Interop.Excel.Worksheet searchResultSheet = null;
-                        try
+                        using (var fs = new FileStream(saveFile.FileName, FileMode.Create, FileAccess.Write))
                         {
-                            excel = new Microsoft.Office.Interop.Excel.Application();
-                            excel.Visible = false;
+                            IWorkbook workbookResult = new XSSFWorkbook();
+                            ISheet resultSheet = workbookResult.CreateSheet("SearchResult");
 
-                            workbooks = excel.Workbooks;
-                            workbook = workbooks.Add();
-                            searchResultSheet = workbook.ActiveSheet;
-
-                            int i = 1;
+                            int columnIndex = 0;
+                            int rowIndex = 0;
+                            IRow headerRow = resultSheet.CreateRow(rowIndex);
                             foreach (DataColumn column in resultTable.Columns)
                             {
                                 if (!column.Caption.Equals("ID", StringComparison.InvariantCultureIgnoreCase))
                                 {
-                                    searchResultSheet.Cells[2, i] = column.Caption;
-                                    i++;
+                                    headerRow.CreateCell(columnIndex).SetCellValue(column.Caption);
+                                    columnIndex++;
                                 }
                             }
-
-                            long rowIndex = 3;
                             foreach (DataRow row in resultTable.Rows)
                             {
-                                int columnIndex = 1;
-
+                                rowIndex++;
+                                columnIndex = 0;
+                                IRow dataRow = resultSheet.CreateRow(rowIndex);
                                 foreach (DataColumn column in row.Table.Columns)
                                 {
                                     if (!column.Caption.Equals("ID", StringComparison.InvariantCultureIgnoreCase))
                                     {
-                                        searchResultSheet.Cells[rowIndex, columnIndex] = row[column.ColumnName];
+                                        dataRow.CreateCell(columnIndex).SetCellValue((row[column.ColumnName]).ToString());
                                         columnIndex++;
                                     }
                                 }
-                                rowIndex++;
                             }
+                            workbookResult.Write(fs);
 
-                            object saveFileName = saveFile.FileName;
-                            workbook.Close(true, saveFileName);
-                            excel.Workbooks.Close();
                             ShowMessageBox("Document created successfully !");
-                        }
-                        finally
-                        {
-                            if (searchResultSheet != null)
-                                System.Runtime.InteropServices.Marshal.ReleaseComObject(searchResultSheet);
-                            if (workbook != null)
-                                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbook);
-                            if (workbooks != null)
-                                System.Runtime.InteropServices.Marshal.ReleaseComObject(workbooks);
-                            excel.Quit();
-                            System.Runtime.InteropServices.Marshal.ReleaseComObject(excel);
-                            searchResultSheet = null;
-                            workbook = null;
-                            workbooks = null;
-                            excel = null;
-
                         }
                     }
                 }
@@ -378,35 +348,38 @@ namespace DocumentStore
                         string saveFileName = saveFile.FileName;
                         if (!Path.GetExtension(saveFile.FileName).Equals("." + saveFile.DefaultExt, StringComparison.InvariantCultureIgnoreCase))
                             saveFileName = saveFile.FileName + "." + saveFile.DefaultExt;
-                        DocX newDocument = DocX.Create(saveFileName);
-
-                        for (int i = selectedRows.Count - 1; i >= 0; i--)
+                        using (var fs = new FileStream(saveFileName, FileMode.Create, FileAccess.Write))
                         {
-                            object fileId = selectedRows[i].Cells["ColumnID"].Value;
+                            XWPFDocument newDocument = new XWPFDocument();
+
+                            for (int i = selectedRows.Count - 1; i >= 0; i--)
+                            {
+                                object fileId = selectedRows[i].Cells["ColumnID"].Value;
 
 
-                            string query = @"SELECT DI.Title, DI.Body, DI.CreatedDate AS EnglishDate, AI.Name as Author
+                                string query = @"SELECT DI.Title, DI.Body, DI.CreatedDate AS EnglishDate, AI.Name as Author
                                 FROM tbl_DocumentInfo DI WITH (NOLOCK),
 	                                tbl_AuthorInfo AI WITH(NOLOCK) 
                                 WHERE DI.Author = AI.Id
 									AND DI.Id = @Id";
 
-                            using (SqlCommand command = new SqlCommand(query))
-                            {
-                                command.Parameters.Add("@Id", SqlDbType.BigInt).Value = fileId;
-                                DataTable dt = DBSupport.ExecuteQueryAndGetDataTable(command);
-                                if (dt != null)
-                                    foreach (DataRow dr in dt.Rows)
-                                    {
-                                        DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
-                                        NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
-                                        AppendInfoToDocument(newDocument, dr["Title"].ToString(), dr["Author"].ToString(), dr["Body"].ToString()
-                                            , nepaliDate.ToString());
-                                    }
+                                using (SqlCommand command = new SqlCommand(query))
+                                {
+                                    command.Parameters.Add("@Id", SqlDbType.BigInt).Value = fileId;
+                                    DataTable dt = DBSupport.ExecuteQueryAndGetDataTable(command);
+                                    if (dt != null)
+                                        foreach (DataRow dr in dt.Rows)
+                                        {
+                                            DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
+                                            NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
+                                            AppendInfoToDocument(newDocument, dr["Title"].ToString(), dr["Author"].ToString(), dr["Body"].ToString()
+                                                , nepaliDate.ToString());
+                                        }
+                                }
                             }
-                        }
 
-                        newDocument.Save();
+                            newDocument.Write(fs);
+                        }
                         ShowMessageBox("Document created successfully !");
                     }
                 }
@@ -453,16 +426,16 @@ namespace DocumentStore
                                         string folderPath = Path.Combine(folderBrowserDialog.SelectedPath, today);
                                         if (!Directory.Exists(folderPath))
                                             Directory.CreateDirectory(folderPath);
-
                                         DateTime engDate = DateTime.Parse(dt.Rows[0]["EnglishDate"].ToString());
                                         NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
                                         string filename = dt.Rows[0]["Title"].ToString() + "_" + nepaliDate.ToString();
                                         string saveFileName = Path.Combine(folderPath, filename + ".docx");
-                                        using (DocX newDocument = DocX.Create(saveFileName))
+                                        using (var fs = new FileStream(saveFileName, FileMode.Create, FileAccess.Write))
                                         {
+                                            XWPFDocument newDocument = new XWPFDocument();
                                             AppendInfoToDocument(newDocument, dt.Rows[0]["Title"].ToString(), dt.Rows[0]["Author"].ToString()
                                                 , dt.Rows[0]["Body"].ToString(), nepaliDate.ToString());
-                                            newDocument.Save();
+                                            newDocument.Write(fs);
                                         }
                                     }
                                 }
@@ -490,19 +463,43 @@ namespace DocumentStore
             { }
         }
 
-        private void AppendInfoToDocument(DocX newDocument, string title, string author, string body, string dateString)
+        private void AppendInfoToDocument(XWPFDocument newDocument, string title, string author, string body, string dateString)
         {
-            Formatting titleFormat = new Formatting();
-            titleFormat.Bold = true;
-            Paragraph paraTitle = newDocument.InsertParagraph(title, false, titleFormat);
-            paraTitle.Alignment = Alignment.center;
-            paraTitle.LineSpacingAfter = 15;
-            newDocument.InsertParagraph(author);
-            newDocument.InsertParagraph();
-            newDocument.InsertParagraph(body);
-            newDocument.InsertParagraph();
-            newDocument.InsertParagraph(dateString + Environment.NewLine);
-            newDocument.InsertParagraph();
+            var paraTitle = newDocument.CreateParagraph();
+            paraTitle.Alignment = ParagraphAlignment.CENTER;
+            paraTitle.SpacingAfter = 15;
+            XWPFRun runTitle = paraTitle.CreateRun();
+            runTitle.IsBold = true;
+            runTitle.SetText(title);
+            newDocument.CreateParagraph();
+            newDocument.CreateParagraph().CreateRun().SetText(author);
+            newDocument.CreateParagraph();
+
+            using (TextReader textReader = new StringReader(body))
+            {
+                string line;
+                while ((line = textReader.ReadLine()) != null)
+                {
+                    var paraBody = newDocument.CreateParagraph();
+                    paraBody.Alignment = ParagraphAlignment.BOTH;
+                    paraBody.CreateRun().SetText(line);
+                }
+            }
+            newDocument.CreateParagraph();
+            newDocument.CreateParagraph().CreateRun().SetText(dateString);
+            newDocument.CreateParagraph();
+
+            //Formatting titleFormat = new Formatting();
+            //titleFormat.Bold = true;
+            //Paragraph paraTitle = newDocument.InsertParagraph(title, false, titleFormat);
+            //paraTitle.Alignment = Alignment.center;
+            //paraTitle.LineSpacingAfter = 15;
+            //newDocument.InsertParagraph(author);
+            //newDocument.InsertParagraph();
+            //newDocument.InsertParagraph(body);
+            //newDocument.InsertParagraph();
+            //newDocument.InsertParagraph(dateString + Environment.NewLine);
+            //newDocument.InsertParagraph();
         }
     }
 }
