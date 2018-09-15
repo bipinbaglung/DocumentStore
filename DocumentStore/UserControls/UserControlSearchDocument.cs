@@ -385,8 +385,11 @@ namespace DocumentStore
                             object fileId = selectedRows[i].Cells["ColumnID"].Value;
 
 
-                            string query = @"SELECT Title, Body, CreatedDate AS EnglishDate
-                                FROM tbl_DocumentInfo DI WITH (NOLOCK) WHERE Id = @Id";
+                            string query = @"SELECT DI.Title, DI.Body, DI.CreatedDate AS EnglishDate, AI.Name as Author
+                                FROM tbl_DocumentInfo DI WITH (NOLOCK),
+	                                tbl_AuthorInfo AI WITH(NOLOCK) 
+                                WHERE DI.Author = AI.Id
+									AND DI.Id = @Id";
 
                             using (SqlCommand command = new SqlCommand(query))
                             {
@@ -397,7 +400,8 @@ namespace DocumentStore
                                     {
                                         DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
                                         NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
-                                        AppendInfoToDocument(newDocument, dr["Title"].ToString(), dr["body"].ToString(), nepaliDate.ToString());
+                                        AppendInfoToDocument(newDocument, dr["Title"].ToString(), dr["Author"].ToString(), dr["Body"].ToString()
+                                            , nepaliDate.ToString());
                                     }
                             }
                         }
@@ -434,8 +438,11 @@ namespace DocumentStore
                             {
                                 object fileId = selectedRows[i].Cells["ColumnID"].Value;
 
-                                string query = @"SELECT Title, Body, CreatedDate AS EnglishDate
-                                FROM tbl_DocumentInfo DI WITH (NOLOCK) WHERE Id = @Id";
+                                string query = @"SELECT DI.Title, DI.Body, DI.CreatedDate AS EnglishDate, AI.Name as Author
+                                FROM tbl_DocumentInfo DI WITH (NOLOCK),
+	                                tbl_AuthorInfo AI WITH(NOLOCK) 
+                                WHERE DI.Author = AI.Id
+									AND DI.Id = @Id";
 
                                 using (SqlCommand command = new SqlCommand(query))
                                 {
@@ -453,8 +460,8 @@ namespace DocumentStore
                                         string saveFileName = Path.Combine(folderPath, filename + ".docx");
                                         using (DocX newDocument = DocX.Create(saveFileName))
                                         {
-                                            AppendInfoToDocument(newDocument, dt.Rows[0]["Title"].ToString(), dt.Rows[0]["body"].ToString()
-                                                    , nepaliDate.ToString());
+                                            AppendInfoToDocument(newDocument, dt.Rows[0]["Title"].ToString(), dt.Rows[0]["Author"].ToString()
+                                                , dt.Rows[0]["Body"].ToString(), nepaliDate.ToString());
                                             newDocument.Save();
                                         }
                                     }
@@ -483,17 +490,18 @@ namespace DocumentStore
             { }
         }
 
-        private void AppendInfoToDocument(DocX newDocument, string title, string body, string dateString)
+        private void AppendInfoToDocument(DocX newDocument, string title, string author, string body, string dateString)
         {
             Formatting titleFormat = new Formatting();
             titleFormat.Bold = true;
             Paragraph paraTitle = newDocument.InsertParagraph(title, false, titleFormat);
             paraTitle.Alignment = Alignment.center;
             paraTitle.LineSpacingAfter = 15;
+            newDocument.InsertParagraph(author);
             newDocument.InsertParagraph();
-            Paragraph paraBody = newDocument.InsertParagraph(body);
+            newDocument.InsertParagraph(body);
             newDocument.InsertParagraph();
-            Paragraph paraDateString = newDocument.InsertParagraph(dateString + Environment.NewLine);
+            newDocument.InsertParagraph(dateString + Environment.NewLine);
             newDocument.InsertParagraph();
         }
     }

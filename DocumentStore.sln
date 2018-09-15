@@ -15,17 +15,17 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Debug|Any CPU.ActiveCfg = Debug
-		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Debug|Any CPU.Build.0 = Debug
+		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAFD586A-9F4C-4089-BED5-D9436C679BC4}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Debug|Any CPU.ActiveCfg = Release
+		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Debug|Any CPU.Build.0 = Release
 		{B03EB589-6B37-4A57-AA63-FFCD0A6C932F}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		VisualSVNWorkingCopyRoot = .
 		SolutionGuid = {F53F76EE-C744-4DBE-9B27-18AA7CC38A77}
+		VisualSVNWorkingCopyRoot = .
 	EndGlobalSection
 EndGlobal

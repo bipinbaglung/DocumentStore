@@ -9,3 +9,6 @@
 /Setup/Debug
 /packages/DocX.1.2.1
 /.vs/DocumentStore/DesignTimeBuild
+/DocumentStore/bin/Release
+/DocumentStore/obj/Release
+/Setup/Release
