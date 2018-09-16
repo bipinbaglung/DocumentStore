@@ -266,23 +266,23 @@ namespace DocumentStore
             return true;
         }
         
-        public static NepaliDateTime EnglishToNepNepali(DateTime dateTime)
+        public static NepaliDateTime EnglishToNepali(DateTime dateTime)
         {
-            NepaliDateTime nepaliDateTime = EngToNep(dateTime.Year, dateTime.Month, dateTime.Day);
+            NepaliDateTime nepaliDateTime = EnglishToNepali(dateTime.Year, dateTime.Month, dateTime.Day);
             nepaliDateTime.Hour = dateTime.Hour;
             nepaliDateTime.Minute = dateTime.Minute;
             nepaliDateTime.Second = dateTime.Second;
             return nepaliDateTime;
         }
 
-        public static NepaliDateTime EngToNep(int yy, int mm, int dd)
+        public static NepaliDateTime EnglishToNepali(int yy, int mm, int dd)
         {
             if (IsEnglishDateInRange(yy, mm, dd) == false)
             {
                 if (DateTime.Now.Year > 2059)
                     return null;
                 else
-                    return EngToNep(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+                    return EnglishToNepali(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
             }
             else
             {
@@ -371,10 +371,10 @@ namespace DocumentStore
 
         public static DateTime NepaliToEnglish(NepaliDateTime dateTime)
         {
-            return NepToEng(dateTime.Year, dateTime.Month, dateTime.Day);
+            return NepaliToEnglish(dateTime.Year, dateTime.Month, dateTime.Day);
         }
 
-        public static DateTime NepToEng(int yy, int mm, int dd)
+        public static DateTime NepaliToEnglish(int yy, int mm, int dd)
         {
             int def_eyy = 1943;
             int def_emm = 4;
@@ -455,13 +455,14 @@ namespace DocumentStore
 
         public static DateTime GetEnglishDateOfNepaliMonthStart(int yy, int mm)
         {
-            return NepToEng(yy, mm, 1);
+            return NepaliToEnglish(yy, mm, 1);
         }
+
         public static DateTime GetEnglishDateOfNepaliMonthEnd(int yy, int mm)
         {
             int yearIndex = yy - 2000;
             int lastDay = nepaliDateData[yearIndex][mm];
-            return NepToEng(yy, mm, lastDay);
+            return NepaliToEnglish(yy, mm, lastDay);
         }
 
     };
@@ -485,7 +486,7 @@ namespace DocumentStore
         public string MonthName { get; set; }
         public int WeekDay { get; set; }
 
-        public static NepaliDateTime Now { get { return DateConverter.EnglishToNepNepali(DateTime.Now); } }
+        public static NepaliDateTime Now { get { return DateConverter.EnglishToNepali(DateTime.Now); } }
 
         public override string ToString()
         {

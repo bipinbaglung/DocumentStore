@@ -2,12 +2,9 @@
 using NPOI.XSSF.UserModel;
 using NPOI.XWPF.UserModel;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace DocumentStore
@@ -216,7 +213,7 @@ namespace DocumentStore
                 foreach (DataRow dr in dt.Rows)
                 {
                     DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
-                    NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
+                    NepaliDateTime nepaliDate = DateConverter.EnglishToNepali(engDate);
                     bool isUncertain = bool.Parse(dr["DateUncertain"].ToString());
                     dr["NepaliDate"] = nepaliDate.ToString() + (isUncertain ? " *" : "");
                 }
@@ -380,7 +377,7 @@ namespace DocumentStore
                                         foreach (DataRow dr in dt.Rows)
                                         {
                                             DateTime engDate = DateTime.Parse(dr["EnglishDate"].ToString());
-                                            NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
+                                            NepaliDateTime nepaliDate = DateConverter.EnglishToNepali(engDate);
                                             AppendInfoToDocument(newDocument, dr["Title"].ToString(), dr["Author"].ToString(), dr["Body"].ToString()
                                                 , nepaliDate.ToString());
                                         }
@@ -437,7 +434,7 @@ namespace DocumentStore
                                         if (!Directory.Exists(folderPath))
                                             Directory.CreateDirectory(folderPath);
                                         DateTime engDate = DateTime.Parse(dt.Rows[0]["EnglishDate"].ToString());
-                                        NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
+                                        NepaliDateTime nepaliDate = DateConverter.EnglishToNepali(engDate);
                                         string filename = dt.Rows[0]["Title"].ToString() + "_" + nepaliDate.ToString();
                                         filename = string.Join("_", filename.Split(Path.GetInvalidFileNameChars()));
                                         saveFileName = Path.Combine(folderPath, filename + ".docx");

@@ -62,7 +62,7 @@ namespace DocumentStore
                         _title = dt.Rows[0]["Title"].ToString();
                         _author = dt.Rows[0]["Author"].ToString();
                         _documentType = dt.Rows[0]["DocumentType"].ToString();
-                        NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(DateTime.Parse(dt.Rows[0]["CreatedDate"].ToString()));
+                        NepaliDateTime nepaliDate = DateConverter.EnglishToNepali(DateTime.Parse(dt.Rows[0]["CreatedDate"].ToString()));
                         bool isUncertain = bool.Parse(dt.Rows[0]["DateUncertain"].ToString());
                         _createdDate = nepaliDate.Year + "-" + nepaliDate.Month.ToString("00") + "-" + nepaliDate.Day.ToString("00") + (isUncertain ? " *" : "");
                         _body = dt.Rows[0]["Body"].ToString();

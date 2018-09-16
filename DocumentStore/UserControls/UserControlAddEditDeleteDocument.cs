@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
-using System.Drawing.Printing;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -77,7 +76,7 @@ namespace DocumentStore
 
         private void LoadNepaliDate()
         {
-            NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(dateTimePickerCreatedDate.Value);
+            NepaliDateTime nepaliDate = DateConverter.EnglishToNepali(dateTimePickerCreatedDate.Value);
             textBoxNepaliDate.Text = nepaliDate.Year + "." + nepaliDate.Month.ToString("00") + "." + nepaliDate.Day.ToString("00");
         }
 
