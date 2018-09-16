@@ -2,16 +2,19 @@
 using NPOI.XSSF.UserModel;
 using NPOI.XWPF.UserModel;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 
 namespace DocumentStore
 {
     public partial class UserControlSearchDocument : UserControl
     {
-        string highlightText;
+        List<string> highlightTerms;
+
         public UserControlSearchDocument()
         {
             InitializeComponent();
@@ -150,7 +153,6 @@ namespace DocumentStore
 
         private void Search()
         {
-            string searchText = textBoxSearchText.Text;
             long publisher = (long)comboBoxPublisherScope.SelectedValue;
             long documentType = (long)comboBoxDocumentTypeScope.SelectedValue;
             long author = (long)comboBoxSearchAuthor.SelectedValue;
@@ -174,29 +176,32 @@ namespace DocumentStore
                 else
                     whereClause = " Author = " + author;
             }
+            highlightTerms = new List<string>();
 
-            string stringClause = string.Empty;
+            if (checkBoxSearchTitle.Checked || checkBoxSearchSummary.Checked || checkBoxSearchBody.Checked)
+            {
+                string searchText = GetSearchText(ref highlightTerms);
+                string stringClause = string.Empty;
+                if (checkBoxSearchTitle.Checked)
+                    stringClause = " CONTAINS(Title, N'" + searchText + "') ";
 
-            if (checkBoxSearchTitle.Checked)
-                stringClause = " CONTAINS(Title, N'\"" + searchText + "\"') ";
+                if (checkBoxSearchSummary.Checked)
+                    if (string.IsNullOrWhiteSpace(stringClause))
+                        stringClause = " CONTAINS(Summary,  N'" + searchText + "') ";
+                    else
+                        stringClause += " OR CONTAINS(Summary, N'" + searchText + "') ";
 
-            if (checkBoxSearchSummary.Checked)
-                if (string.IsNullOrWhiteSpace(stringClause))
-                    stringClause = " CONTAINS(Summary,  N'\"" + searchText + "\"') ";
-                else
-                    stringClause += " OR CONTAINS(Summary, N'\"" + searchText + "\"') ";
+                if (checkBoxSearchBody.Checked)
+                    if (string.IsNullOrWhiteSpace(stringClause))
+                        stringClause = " CONTAINS(Body, N'" + searchText + "') ";
+                    else
+                        stringClause += " OR CONTAINS(Body, N'" + searchText + "') ";
 
-            if (checkBoxSearchBody.Checked)
-                if (string.IsNullOrWhiteSpace(stringClause))
-                    stringClause = " CONTAINS(Body, N'\"" + searchText + "\"') ";
-                else
-                    stringClause += " OR CONTAINS(Body, N'\"" + searchText + "\"') ";
-
-            if (string.IsNullOrWhiteSpace(whereClause))
-                whereClause = stringClause;
-            else if (!string.IsNullOrWhiteSpace(stringClause))
-                whereClause += " AND (" + stringClause + ")";
-
+                if (string.IsNullOrWhiteSpace(whereClause))
+                    whereClause = stringClause;
+                else if (!string.IsNullOrWhiteSpace(stringClause))
+                    whereClause += " AND (" + stringClause + ")";
+            }
             if (!string.IsNullOrWhiteSpace(whereClause))
                 whereClause = " WHERE " + whereClause;
 
@@ -224,8 +229,60 @@ namespace DocumentStore
 
             dataGridViewDocumentSearchResult.DataSource = dt;
             dataGridViewDocumentSearchResult.AutoResizeColumns();
-            if (!string.IsNullOrWhiteSpace(stringClause))
-                highlightText = searchText;
+        }
+
+        private string GetSearchText(ref List<string> highlightTerms)
+        {
+            string text = textBoxSearchText.Text.Trim();
+            if (text.Length > 0)
+            {
+                List<string> searchTerms = new List<string>();
+                StringBuilder builder = new StringBuilder();
+                bool phraseStart = false;
+                foreach (char c in text)
+                {
+                    if (c == '"')
+                    {
+                        phraseStart = !phraseStart;
+                        if (phraseStart)
+                        {
+                            if (builder.Length > 0)
+                            {
+                                searchTerms.Add(builder.ToString());
+                                highlightTerms.Add(builder.ToString());
+                            builder.Clear();
+                            }
+                            builder.Append(c);
+                        }
+                        else
+                        {
+                            builder.Append(c);
+                            if (builder.ToString().Trim('"').Length > 0)
+                            {
+                                searchTerms.Add(builder.ToString());
+                                highlightTerms.Add(builder.ToString().Trim('"'));
+                            }
+                            builder.Clear();
+                        }
+                    }
+                    else if (string.IsNullOrWhiteSpace(c.ToString()))
+                    {
+                        if (phraseStart)
+                            builder.Append(c);
+                        else if (builder.Length > 0)
+                        {
+                            searchTerms.Add(builder.ToString());
+                            highlightTerms.Add(builder.ToString());
+                            builder.Clear();
+                        }
+                    }
+                    else
+                        builder.Append(c);
+                }
+
+                return string.Join(" OR ", searchTerms);
+            }
+            return string.Empty;
         }
 
         private bool ValidateSearchInputs()
@@ -269,7 +326,7 @@ namespace DocumentStore
             {
                 long documentId = long.Parse(dataGridViewDocumentSearchResult["ColumnID", e.RowIndex].Value.ToString());
                 FormUpdateDeleteDocument formUpdateDocument = new FormUpdateDeleteDocument(documentId);
-                formUpdateDocument.highlightText = highlightText;
+                formUpdateDocument.highlightTerms = highlightTerms;
                 formUpdateDocument.ShowDialog(this);
                 if (formUpdateDocument.DocumentUpdated)
                     ButtonSearch_Click(null, null);

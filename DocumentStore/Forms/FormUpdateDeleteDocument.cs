@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace DocumentStore
@@ -6,7 +7,7 @@ namespace DocumentStore
     public partial class FormUpdateDeleteDocument : Form
     {
         public bool DocumentUpdated = false;
-        public string highlightText;
+        public List<string> highlightTerms;
         public FormUpdateDeleteDocument(long documentId)
         {
             InitializeComponent();
@@ -20,7 +21,7 @@ namespace DocumentStore
         {
             this.userControlAddEditDeleteDocument.LoadControlUI();
             this.userControlAddEditDeleteDocument.OnDocumentUpdate += UserControlAddEditDeleteDocument_OnDocumentUpdate;
-            this.userControlViewDocument.LoadControlUI(highlightText);
+            this.userControlViewDocument.LoadControlUI(highlightTerms);
             this.userControlViewDocument.OnEditClick += UserControlViewDocument_OnEditClick;
         }
 

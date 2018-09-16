@@ -36,10 +36,10 @@ namespace DocumentStore
             _documentId = documentId;
         }
 
-        public void LoadControlUI(string highlightText)
+        public void LoadControlUI(List<string> highlightTerms)
         {
             LoadDocumentForView();
-            HighlightText(highlightText);
+            HighlightText(highlightTerms);
         }
         private void LoadDocumentForView()
         {
@@ -209,13 +209,12 @@ namespace DocumentStore
             e.HasMorePages = (textToPrint.Length > 0);
         }
 
-        private void HighlightText(string queryText)
+        private void HighlightText(List<string> highlightTerms)
         {
-            if (!string.IsNullOrWhiteSpace(queryText))
+            if (highlightTerms.Count>0)
             {
-                List<string> highlightStrings = GetHighlightText(queryText);
                 int totalMatchCount = 0;
-                foreach (string text in highlightStrings)
+                foreach (string text in highlightTerms)
                 {
                     Regex regExp = new Regex(text, RegexOptions.IgnoreCase);
                     MatchCollection matches = regExp.Matches(richTextBoxDocumentContent.Text);
@@ -278,24 +277,6 @@ namespace DocumentStore
             {
                 System.Diagnostics.Process.Start(clickedItem.SubItems[1].Text);
             }
-        }
-        private List<string> GetHighlightText(string searchText)
-        {
-            List<string> highlightStrings = new List<string>();
-            try
-            {
-                foreach (string token in Regex.Split(searchText, "\\s+"))
-                {
-                    string text = token.Trim('"').Trim();
-                    if (text.Length > 0)
-                        highlightStrings.Add(text);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowMessageBox("Could not create highlight text." + Environment.NewLine + ex.Message, MessageBoxIcon.Warning);
-            }
-            return highlightStrings;
         }
     }
 }
