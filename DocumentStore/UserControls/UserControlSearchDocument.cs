@@ -2,9 +2,12 @@
 using NPOI.XSSF.UserModel;
 using NPOI.XWPF.UserModel;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace DocumentStore
@@ -137,7 +140,14 @@ namespace DocumentStore
         {
             if (ValidateSearchInputs())
             {
-                Search();
+                try
+                {
+                    Search();
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageBox("Could not perform search." + Environment.NewLine + ex.Message, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -219,7 +229,6 @@ namespace DocumentStore
             dataGridViewDocumentSearchResult.AutoResizeColumns();
             if (!string.IsNullOrWhiteSpace(stringClause))
                 highlightText = searchText;
-
         }
 
         private bool ValidateSearchInputs()
@@ -321,11 +330,11 @@ namespace DocumentStore
                     }
                 }
                 else
-                    ShowMessageBox("Nothing found to save.");
+                    ShowMessageBox("Nothing found to save.", MessageBoxIcon.Stop);
             }
             catch (Exception ex)
             {
-                ShowMessageBox("Could not save file. Error : " + ex.Message);
+                ShowMessageBox("Could not save file. " + Environment.NewLine + "Error : " + ex.Message, MessageBoxIcon.Error);
             }
         }
 
@@ -385,7 +394,7 @@ namespace DocumentStore
                 }
                 catch (Exception ex)
                 {
-                    ShowMessageBox("Could not save file. Error : " + ex.Message);
+                    ShowMessageBox("Could not save file. Error : " + ex.Message, MessageBoxIcon.Error);
                 }
             }
             else
@@ -405,6 +414,7 @@ namespace DocumentStore
                     {
                         progressBarExport.Show();
                         string today = NepaliDateTime.Now.ToDateTimeString();
+                        string saveFileName = string.Empty;
                         for (int i = selectedRows.Count - 1; i >= 0; i--)
                         {
                             try
@@ -429,7 +439,8 @@ namespace DocumentStore
                                         DateTime engDate = DateTime.Parse(dt.Rows[0]["EnglishDate"].ToString());
                                         NepaliDateTime nepaliDate = DateConverter.EnglishToNepNepali(engDate);
                                         string filename = dt.Rows[0]["Title"].ToString() + "_" + nepaliDate.ToString();
-                                        string saveFileName = Path.Combine(folderPath, filename + ".docx");
+                                        filename = string.Join("_", filename.Split(Path.GetInvalidFileNameChars()));
+                                        saveFileName = Path.Combine(folderPath, filename + ".docx");
                                         using (var fs = new FileStream(saveFileName, FileMode.Create, FileAccess.Write))
                                         {
                                             XWPFDocument newDocument = new XWPFDocument();
@@ -444,7 +455,8 @@ namespace DocumentStore
                             }
                             catch (Exception ex)
                             {
-                                ShowMessageBox("Could not save files. Error : " + ex.Message);
+                                ShowMessageBox("Could not save file: " + saveFileName + Environment.NewLine + " Error : " + ex.Message
+                                    , MessageBoxIcon.Error);
                             }
                         }
                         ShowMessageBox("Documents created successfully !");
@@ -452,15 +464,14 @@ namespace DocumentStore
                 }
                 catch (Exception ex)
                 {
-                    ShowMessageBox("Could not save files. Error : " + ex.Message);
+                    ShowMessageBox("Could not save files." + Environment.NewLine + " Error : " + ex.Message
+                        , MessageBoxIcon.Error);
                 }
                 finally
                 {
                     progressBarExport.Hide();
                 }
             }
-            else
-            { }
         }
 
         private void AppendInfoToDocument(XWPFDocument newDocument, string title, string author, string body, string dateString)
@@ -488,18 +499,6 @@ namespace DocumentStore
             newDocument.CreateParagraph();
             newDocument.CreateParagraph().CreateRun().SetText(dateString);
             newDocument.CreateParagraph();
-
-            //Formatting titleFormat = new Formatting();
-            //titleFormat.Bold = true;
-            //Paragraph paraTitle = newDocument.InsertParagraph(title, false, titleFormat);
-            //paraTitle.Alignment = Alignment.center;
-            //paraTitle.LineSpacingAfter = 15;
-            //newDocument.InsertParagraph(author);
-            //newDocument.InsertParagraph();
-            //newDocument.InsertParagraph(body);
-            //newDocument.InsertParagraph();
-            //newDocument.InsertParagraph(dateString + Environment.NewLine);
-            //newDocument.InsertParagraph();
         }
     }
 }

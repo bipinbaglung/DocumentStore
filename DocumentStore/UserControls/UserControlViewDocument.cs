@@ -1,5 +1,6 @@
 ﻿using NPOI.XWPF.UserModel;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
@@ -133,7 +134,7 @@ namespace DocumentStore
                     string saveFileName = saveFile.FileName;
                     if (!Path.GetExtension(saveFile.FileName).Equals("." + saveFile.DefaultExt, StringComparison.InvariantCultureIgnoreCase))
                         saveFileName = saveFile.FileName + "." + saveFile.DefaultExt;
-                    
+
                     using (var fs = new FileStream(saveFileName, FileMode.Create, FileAccess.Write))
                     {
                         XWPFDocument doc = new XWPFDocument();
@@ -146,7 +147,7 @@ namespace DocumentStore
                         doc.CreateParagraph();
                         doc.CreateParagraph().CreateRun().SetText(_author);
                         doc.CreateParagraph();
-                        
+
                         using (TextReader textReader = new StringReader(_body))
                         {
                             string line;
@@ -166,7 +167,7 @@ namespace DocumentStore
             }
             catch (Exception ex)
             {
-                ShowMessageBox("Could not save file. Error : " + ex.Message);
+                ShowMessageBox("Could not save file." + Environment.NewLine + " Error : " + ex.Message, MessageBoxIcon.Error);
             }
         }
 
@@ -190,7 +191,7 @@ namespace DocumentStore
             }
             catch (Exception ex)
             {
-                ShowMessageBox("Error while printing. Error: " + ex.Message);
+                ShowMessageBox("Could not print file." + Environment.NewLine + " Error: " + ex.Message, MessageBoxIcon.Error);
             }
         }
 
@@ -208,19 +209,25 @@ namespace DocumentStore
             e.HasMorePages = (textToPrint.Length > 0);
         }
 
-        private void HighlightText(string text)
+        private void HighlightText(string queryText)
         {
-            if (!string.IsNullOrWhiteSpace(text))
+            if (!string.IsNullOrWhiteSpace(queryText))
             {
-                Regex regExp = new Regex(text, RegexOptions.IgnoreCase);
-                MatchCollection matches = regExp.Matches(richTextBoxDocumentContent.Text);
-                labelMatchCount.Visible = true;
-                labelMatchCount.Text = matches.Count.ToString();
-                foreach (Match match in matches)
+                List<string> highlightStrings = GetHighlightText(queryText);
+                int totalMatchCount = 0;
+                foreach (string text in highlightStrings)
                 {
-                    richTextBoxDocumentContent.Select(match.Index, match.Length);
-                    richTextBoxDocumentContent.SelectionBackColor = Color.Yellow;
+                    Regex regExp = new Regex(text, RegexOptions.IgnoreCase);
+                    MatchCollection matches = regExp.Matches(richTextBoxDocumentContent.Text);
+                    labelMatchCount.Visible = true;
+                    totalMatchCount += matches.Count;
+                    foreach (Match match in matches)
+                    {
+                        richTextBoxDocumentContent.Select(match.Index, match.Length);
+                        richTextBoxDocumentContent.SelectionBackColor = Color.Yellow;
+                    }
                 }
+                labelMatchCount.Text = totalMatchCount.ToString();
             }
             else
                 labelMatchCount.Visible = false;
@@ -271,6 +278,24 @@ namespace DocumentStore
             {
                 System.Diagnostics.Process.Start(clickedItem.SubItems[1].Text);
             }
+        }
+        private List<string> GetHighlightText(string searchText)
+        {
+            List<string> highlightStrings = new List<string>();
+            try
+            {
+                foreach (string token in Regex.Split(searchText, "\\s+"))
+                {
+                    string text = token.Trim('"').Trim();
+                    if (text.Length > 0)
+                        highlightStrings.Add(text);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowMessageBox("Could not create highlight text." + Environment.NewLine + ex.Message, MessageBoxIcon.Warning);
+            }
+            return highlightStrings;
         }
     }
 }
