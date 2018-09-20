@@ -279,7 +279,12 @@ namespace DocumentStore
                     else
                         builder.Append(c);
                 }
-
+				if (builder.Length > 0)
+				{
+					searchTerms.Add(builder.ToString());
+					highlightTerms.Add(builder.ToString());
+					builder.Clear();
+				}
                 return string.Join(" OR ", searchTerms);
             }
             return string.Empty;
