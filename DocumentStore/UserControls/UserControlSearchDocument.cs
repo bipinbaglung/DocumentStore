@@ -465,7 +465,8 @@ namespace DocumentStore
             DataGridViewSelectedRowCollection selectedRows = dataGridViewDocumentSearchResult.SelectedRows;
             if (selectedRows.Count > 0)
             {
-                int incrementValue = 100 / selectedRows.Count;
+                int progress = 0;
+                int totalCount = selectedRows.Count;
                 FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
                 try
                 {
@@ -497,7 +498,7 @@ namespace DocumentStore
                                             Directory.CreateDirectory(folderPath);
                                         DateTime engDate = DateTime.Parse(dt.Rows[0]["EnglishDate"].ToString());
                                         NepaliDateTime nepaliDate = DateConverter.EnglishToNepali(engDate);
-                                        string filename = dt.Rows[0]["Title"].ToString() + "_" + nepaliDate.ToString();
+                                        string filename = nepaliDate.ToString() + "_" + dt.Rows[0]["Title"].ToString() + "_" + Guid.NewGuid().ToString().Replace("-","");
                                         filename = string.Join("_", filename.Split(Path.GetInvalidFileNameChars()));
                                         saveFileName = Path.Combine(folderPath, filename + ".docx");
                                         using (var fs = new FileStream(saveFileName, FileMode.Create, FileAccess.Write))
@@ -509,8 +510,8 @@ namespace DocumentStore
                                         }
                                     }
                                 }
-
-                                progressBarExport.Increment(incrementValue);
+                                progressBarExport.Value = ++progress * 100 / totalCount;
+                                progressBarExport.Update();
                             }
                             catch (Exception ex)
                             {
@@ -528,6 +529,7 @@ namespace DocumentStore
                 }
                 finally
                 {
+                    progressBarExport.Value = 0;
                     progressBarExport.Hide();
                 }
             }

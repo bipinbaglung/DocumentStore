@@ -23,7 +23,7 @@ namespace DocumentStore
             _servername = ConfigValues.DBServerName;
             _database = ConfigValues.DBName;
             if (!string.IsNullOrWhiteSpace(DatabaseSuffix))
-                _database = _database + "_" + DatabaseSuffix; ;
+                _database = _database + "_" + DatabaseSuffix;
             _windowsAuthentication = ConfigValues.DBWindowsAuthentication;
             _documentStoreConnection = GetSqlConnection();
             _documentStoreConnection.Open();
